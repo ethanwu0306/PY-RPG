@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 規則介紹與極限版</title>
+    <title>Py RPG - 規則按鈕顯示修復版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
         #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; }
@@ -45,14 +45,14 @@
         .log-heal { color: #2ecc71; font-weight: bold; }
         .log-skill { color: #3498db; font-weight: bold; }
         .log-dmg { color: #e74c3c; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <!-- 主畫面右下角遊玩規則按鈕 -->
-    <button class="btn-rules-corner" onclick="showGameGuide()">📖 遊玩規則與介紹</button>
+    <!-- 右下角規則介紹按鈕，增加 ID 方便控制隱藏 -->
+    <button id="btn-corner-rules" class="btn-rules-corner" onclick="showGameGuide()">📖 遊玩規則與介紹</button>
 
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
@@ -86,7 +86,7 @@
             • 🧪 <b>藥水商店</b>：購買生命藥水 (100 HP) 與魔力藥水 (50 MP)，戰鬥中隨時使用。<br>
             • 🏆 <b>勇者成就</b>：達成關卡與採礦里程碑即可領取豐厚金幣與附魔石獎勵！
         </div>
-        <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回遊戲</button>
+        <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回主畫面</button>
     </div>
 
     <div id="class-select" class="hidden">
@@ -540,11 +540,23 @@ function applyLanguage() {
     document.getElementById('shop-title').innerText = t.shopT;
 }
 
-function hideAll() { ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen'].forEach(id => document.getElementById(id).classList.add('hidden')); }
-function showMainMenu() { hideAll(); document.getElementById('main-menu').classList.remove('hidden'); applyLanguage(); document.getElementById('btn-load').disabled = !localStorage.getItem('pyrpg_save_v1.0'); }
+// 隱藏畫面時同時將右下角按鈕隱藏
+function hideAll() { 
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen'].forEach(id => document.getElementById(id).classList.add('hidden')); 
+    document.getElementById('btn-corner-rules').classList.add('hidden');
+}
+
+// 只有回主畫面才將右下角按鈕重新顯示
+function showMainMenu() { 
+    hideAll(); 
+    document.getElementById('main-menu').classList.remove('hidden'); 
+    document.getElementById('btn-corner-rules').classList.remove('hidden'); // 只有主畫面顯示
+    applyLanguage(); 
+    document.getElementById('btn-load').disabled = !localStorage.getItem('pyrpg_save_v1.0'); 
+}
+
 function showClassSelect() { hideAll(); document.getElementById('class-select').classList.remove('hidden'); }
 
-// 初始化包含職業開場獨特屬性的角色
 function initGame(jobCode) {
     let c = CLASSES[jobCode];
     player = {
@@ -555,7 +567,6 @@ function initGame(jobCode) {
         ores: { copper: 0, iron: 0, gold: 0, diamond: 0 },
         potions: { hp: 1, mp: 1 }, mineCount: 0, achieved: [],
         
-        // 開場職業獨立數值
         critRate: c.critRate, critDmg: c.critDmg, evasion: c.evasion,
         poisonRate: 0, burnRate: 0, freezeRate: 0,
         poisonRes: 0, burnRes: 0, frostRes: 0, darkRes: 0
@@ -1110,7 +1121,7 @@ function refreshSkills() {
 
 function saveGame() { localStorage.setItem('pyrpg_save_v1.0', JSON.stringify({ player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills })); alert(I18N[curLang].saveSuccess); }
 function loadGame() { 
-    let saved = localStorage.setItem('pyrpg_save_v1.0'); 
+    let saved = localStorage.getItem('pyrpg_save_v1.0'); 
     if (saved) { 
         let data = JSON.parse(saved); 
         player = data.player; 
