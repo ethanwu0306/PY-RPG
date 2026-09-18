@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 規則按鈕顯示修復版</title>
+    <title>Py RPG - 說明文字修正版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
         #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; }
@@ -51,7 +51,6 @@
 <body>
 
 <div id="game-container">
-    <!-- 右下角規則介紹按鈕，增加 ID 方便控制隱藏 -->
     <button id="btn-corner-rules" class="btn-rules-corner" onclick="showGameGuide()">📖 遊玩規則與介紹</button>
 
     <div id="main-menu">
@@ -81,8 +80,8 @@
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予烈焰、吸血、凍結、破甲等 12 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
-            • 🛠️ <b>裝備商店</b>：隨機購買現成武器防具，支援屬性即時對比。<br>
-            • 📖 <b>技能商店</b>：隨機刷新所有職業技能（本職業才能購買），支援 100 G 換一批。<br>
+            • 🛠️ <b>裝備商店</b>：隨機購買現成武器防具。<br>
+            • 📖 <b>技能商店</b>：隨機刷新所有職業技能， 100 金幣 換一批。<br>
             • 🧪 <b>藥水商店</b>：購買生命藥水 (100 HP) 與魔力藥水 (50 MP)，戰鬥中隨時使用。<br>
             • 🏆 <b>勇者成就</b>：達成關卡與採礦里程碑即可領取豐厚金幣與附魔石獎勵！
         </div>
@@ -91,9 +90,9 @@
 
     <div id="class-select" class="hidden">
         <h2 id="class-title">請選擇你的職業</h2>
-        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (初始超高血量 220 HP | 專屬近戰)</button>
-        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (初始超高魔力 160 MP | 專屬法杖)</button>
-        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (初始超高閃避 20% | 專屬弓弩)</button>
+        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 武器: 近戰)</button>
+        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (特性: 高魔力 | 武器: 法杖)</button>
+        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (特性: 高敏捷 | 武器: 弓)</button>
         <button class="btn btn-secondary" onclick="showMainMenu()" id="btn-class-back">⬅️ 返回主畫面</button>
     </div>
 
@@ -371,7 +370,7 @@ let curLang = "zh";
 const I18N = {
     zh: {
         langName: "中文", subTitle: "版本 v1.1", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
-        classT: "請選擇你的職業", warB: "🛡️ 戰士 (高血量 220 HP | 專屬近戰)", magB: "🔮 法師 (高魔力 160 MP | 專屬法杖)", arcB: "🏹 射手 (高閃避 20% | 專屬弓弩)",
+        classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 武器: 近戰)", magB: "🔮 法師 (特性: 高魔力 | 武器: 法杖)", arcB: "🏹 射手 (特性: 高敏捷 | 武器: 弓)",
         backMain: "⬅️ 返回主畫面", back: "⬅️ 返回村莊", cardT: "🔮 遇見神秘商人！", cardSub: "打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：",
         atkB: "⚔️ 普通攻擊", skillGridT: "✨ 技能快捷格 (最多4招)：",
         vStats: "📊 查看角色詳細面板", vRest: "⛪ 旅館休息 - 30 G",
@@ -392,7 +391,7 @@ const I18N = {
     },
     en: {
         langName: "English", subTitle: "Version v1.1", startG: "🎮 New Game", loadG: "📂 Load Game",
-        classT: "Choose Your Class", warB: "🛡️ Warrior (High HP 220 | Melee)", magB: "🔮 Mage (High MP 160 | Staff)", arcB: "🏹 Archer (High Evasion 20% | Bow)",
+        classT: "Choose Your Class", warB: "🛡️ Warrior (Trait: High HP | Weapon: Melee)", magB: "🔮 Mage (Trait: High MP | Weapon: Staff)", arcB: "🏹 Archer (Trait: High Evasion | Weapon: Bow)",
         backMain: "⬅️ Return to Main Menu", back: "⬅️ Return to Village", cardT: "🔮 Mysterious Merchant!", cardSub: "Defeated Area Boss! Choose a card blessing:",
         atkB: "⚔️ Basic Attack", skillGridT: "✨ Skill Hotbars (Max 4):",
         vStats: "📊 View Character Stats", vRest: "⛪ Rest at Inn - 30 G",
@@ -540,17 +539,15 @@ function applyLanguage() {
     document.getElementById('shop-title').innerText = t.shopT;
 }
 
-// 隱藏畫面時同時將右下角按鈕隱藏
 function hideAll() { 
     ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen'].forEach(id => document.getElementById(id).classList.add('hidden')); 
     document.getElementById('btn-corner-rules').classList.add('hidden');
 }
 
-// 只有回主畫面才將右下角按鈕重新顯示
 function showMainMenu() { 
     hideAll(); 
     document.getElementById('main-menu').classList.remove('hidden'); 
-    document.getElementById('btn-corner-rules').classList.remove('hidden'); // 只有主畫面顯示
+    document.getElementById('btn-corner-rules').classList.remove('hidden');
     applyLanguage(); 
     document.getElementById('btn-load').disabled = !localStorage.getItem('pyrpg_save_v1.0'); 
 }
@@ -1121,7 +1118,7 @@ function refreshSkills() {
 
 function saveGame() { localStorage.setItem('pyrpg_save_v1.0', JSON.stringify({ player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills })); alert(I18N[curLang].saveSuccess); }
 function loadGame() { 
-    let saved = localStorage.getItem('pyrpg_save_v1.0'); 
+    let saved = localStorage.setItem('pyrpg_save_v1.0'); 
     if (saved) { 
         let data = JSON.parse(saved); 
         player = data.player; 
