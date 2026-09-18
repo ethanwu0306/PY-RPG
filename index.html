@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 存檔完全修復與 GitHub 相容版</title>
+    <title>Py RPG - v1.3 存讀檔介面完全修復版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
         #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; }
@@ -49,8 +49,7 @@
         .log-dmg { color: #e74c3c; }
         .hidden { display: none !important; }
         
-        /* 匯出匯入存檔彈窗文字框 */
-        textarea.save-box { width: 100%; height: 100px; background: #0a0812; color: #f1c40f; border: 1px solid #b38728; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 11px; box-sizing: border-box; resize: none; margin: 8px 0; }
+        textarea.save-box { width: 100%; height: 90px; background: #0a0812; color: #f1c40f; border: 1px solid #b38728; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 11px; box-sizing: border-box; resize: none; margin: 8px 0; }
     </style>
 </head>
 <body>
@@ -58,20 +57,21 @@
 <div id="game-container">
     <button id="btn-corner-rules" class="btn-rules-corner" onclick="showGameGuide()">📖 遊玩規則與介紹</button>
 
+    <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.1 (GitHub修復版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.3</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
             <button class="btn btn-secondary" id="btn-load" onclick="startBGM(); loadGame();">📂 讀取本地存檔</button>
-            <button class="btn btn-secondary" style="background:#7d3c98;" onclick="showTransferSave()">📋 匯入/匯出跨裝置存檔代碼</button>
+            <button class="btn btn-secondary" style="background:#7d3c98;" onclick="showTransferSave()">📋 跨裝置存檔備份與匯入</button>
             <button class="btn" style="background:#27ae60; font-size:11px; padding:6px; margin-top:8px;" onclick="toggleBGM()" id="btn-bgm">🎵 背景音樂: 開</button>
         </div>
     </div>
 
-    <!-- 跨裝置存檔轉換彈窗 -->
+    <!-- 獨立存讀檔介面畫面（修正殘留BUG） -->
     <div id="transfer-save-screen" class="hidden">
         <h2>📋 跨裝置存檔備份與匯入</h2>
         <div class="status-box">
@@ -85,6 +85,7 @@
         <button class="btn btn-secondary" onclick="showMainMenu()">⬅️ 返回主畫面</button>
     </div>
 
+    <!-- 遊戲規則與介紹視窗 -->
     <div id="guide-screen" class="hidden">
         <h2>📖 勇者冒險指南 & 設施玩法介紹</h2>
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
@@ -102,7 +103,11 @@
             • 🛠️ <b>裝備商店</b>：隨機購買現成武器防具。<br>
             • 📖 <b>技能商店</b>：隨機刷新所有職業技能， 100 金幣 換一批。<br>
             • 🧪 <b>藥水商店</b>：購買生命藥水 (100 HP) 與魔力藥水 (50 MP)，戰鬥中隨時使用。<br>
-            • 🏆 <b>勇者成就</b>：50 項四大分類成就，達成即領大量金幣與附魔石！
+            • 🏆 <b>勇者成就</b>：50 項四大分類成就，達成即領大量金幣與附魔石！<br><br>
+
+            <div class="section-header">💾 四、存檔與讀檔說明</div>
+            • <b>本地自動存檔</b>：在村莊點擊「💾 儲存進度」後，遊戲進度會自動儲存在當前瀏覽器中，下次開啟同一網址點擊「📂 讀取本地存檔」即可接續。<br>
+            • <b>跨裝置/ GitHub Pages 存檔</b>：若更換裝置、手機、或瀏覽器清除快取，可在主畫面使用「📋 跨裝置存檔備份與匯入」複製進度代碼備份；換裝置時貼上代碼即可還原進度！
         </div>
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回主畫面</button>
     </div>
@@ -247,8 +252,7 @@
 </div>
 
 <script>
-// 使用 GitHub Pages 獨立隔離 Key，防止與其他託管遊戲撞名
-const SAVE_KEY = "pyrpg_save_github_v1.1_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v1.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 function showGameGuide() { hideAll(); document.getElementById('guide-screen').classList.remove('hidden'); }
 function hideGameGuide() { showMainMenu(); }
@@ -431,7 +435,7 @@ let curLang = "zh";
 
 const I18N = {
     zh: {
-        langName: "中文", subTitle: "版本 v1.1", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
+        langName: "中文", subTitle: "版本 v1.3", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
         classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 武器: 近戰)", magB: "🔮 法師 (特性: 高魔力 | 武器: 法杖)", arcB: "🏹 射手 (特性: 高敏捷 | 武器: 弓)",
         backMain: "⬅️ 返回主畫面", back: "⬅️ 返回村莊", cardT: "🔮 遇見神秘商人！", cardSub: "打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：",
         atkB: "⚔️ 普通攻擊", skillGridT: "✨ 技能快捷格 (最多4招)：",
@@ -452,7 +456,7 @@ const I18N = {
         saveSuccess: "💾 存檔成功！", loadSuccess: "📂 成功載入進度！", hpPotLabel: "生命藥水", mpPotLabel: "魔力藥水", noActions: "❌ 村莊行動力不足！"
     },
     en: {
-        langName: "English", subTitle: "Version v1.1", startG: "🎮 New Game", loadG: "📂 Load Game",
+        langName: "English", subTitle: "Version v1.3", startG: "🎮 New Game", loadG: "📂 Load Game",
         classT: "Choose Your Class", warB: "🛡️ Warrior (Trait: High HP | Weapon: Melee)", magB: "🔮 Mage (Trait: High MP | Weapon: Staff)", arcB: "🏹 Archer (Trait: High Evasion | Weapon: Bow)",
         backMain: "⬅️ Return to Main Menu", back: "⬅️ Return to Village", cardT: "🔮 Mysterious Merchant!", cardSub: "Defeated Area Boss! Choose a card blessing:",
         atkB: "⚔️ Basic Attack", skillGridT: "✨ Skill Hotbars (Max 4):",
@@ -793,7 +797,10 @@ function applyLanguage() {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen'].forEach(id => document.getElementById(id).classList.add('hidden')); 
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen', 'transfer-save-screen'].forEach(id => {
+        let el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    }); 
     document.getElementById('btn-corner-rules').classList.add('hidden');
 }
 
@@ -802,7 +809,7 @@ function showMainMenu() {
     document.getElementById('main-menu').classList.remove('hidden'); 
     document.getElementById('btn-corner-rules').classList.remove('hidden');
     applyLanguage(); 
-    document.getElementById('btn-load').disabled = !localStorage.getItem('pyrpg_save_v1.0'); 
+    document.getElementById('btn-load').disabled = !localStorage.getItem(SAVE_KEY); 
 }
 
 function showClassSelect() { hideAll(); document.getElementById('class-select').classList.remove('hidden'); }
