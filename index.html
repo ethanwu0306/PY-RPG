@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 90武器60技能極限擴充版</title>
+    <title>Py RPG - 存檔完全修復與 GitHub 相容版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
         #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; }
@@ -48,6 +48,9 @@
         .log-skill { color: #3498db; font-weight: bold; }
         .log-dmg { color: #e74c3c; }
         .hidden { display: none !important; }
+        
+        /* 匯出匯入存檔彈窗文字框 */
+        textarea.save-box { width: 100%; height: 100px; background: #0a0812; color: #f1c40f; border: 1px solid #b38728; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 11px; box-sizing: border-box; resize: none; margin: 8px 0; }
     </style>
 </head>
 <body>
@@ -57,14 +60,29 @@
 
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.1</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.1 (GitHub修復版)</p>
         
-        <div style="max-width: 320px; margin: 30px auto;">
+        <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
-            <button class="btn btn-secondary" id="btn-load" onclick="startBGM(); loadGame();">📂 讀取存檔</button>
+            <button class="btn btn-secondary" id="btn-load" onclick="startBGM(); loadGame();">📂 讀取本地存檔</button>
+            <button class="btn btn-secondary" style="background:#7d3c98;" onclick="showTransferSave()">📋 匯入/匯出跨裝置存檔代碼</button>
             <button class="btn" style="background:#27ae60; font-size:11px; padding:6px; margin-top:8px;" onclick="toggleBGM()" id="btn-bgm">🎵 背景音樂: 開</button>
         </div>
+    </div>
+
+    <!-- 跨裝置存檔轉換彈窗 -->
+    <div id="transfer-save-screen" class="hidden">
+        <h2>📋 跨裝置存檔備份與匯入</h2>
+        <div class="status-box">
+            <p style="margin:0 0 5px 0; font-size:12px; color:#ccc;">複製下方代碼妥善保存，即可在任何手機或電腦貼上繼續遊玩：</p>
+            <textarea id="save-code-input" class="save-box" placeholder="在此貼上存檔代碼..."></textarea>
+            <div class="tab-grid">
+                <button class="btn btn-action" onclick="exportSaveCode()">📋 複製當前存檔代碼</button>
+                <button class="btn" style="background:#d35400;" onclick="importSaveCode()">📥 貼上代碼匯入進度</button>
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="showMainMenu()">⬅️ 返回主畫面</button>
     </div>
 
     <div id="guide-screen" class="hidden">
@@ -77,7 +95,7 @@
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
             • ⚡ <b>礦坑採礦</b> (耗 1 行動力)：隨機挖取銅、鐵、金、鑽石等稀有礦石。<br>
-            • 🔨 <b>鐵匠鋪</b> (耗 1 行動力)：分類為戰士武器、法師武器、弓箭手武器與共通防具裝備打科技。<br>
+            • 🔨 <b>鐵匠鋪</b> (耗 1 行動力)：分類為戰士武器、法師武器、弓箭手武器與共通防具裝備。<br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予烈焰、吸血、凍結、破甲等 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
@@ -167,7 +185,7 @@
         </div>
         
         <div style="margin-top:10px;">
-            <button class="btn btn-secondary" onclick="saveGame()" id="btn-v-save">💾 儲存進度</button>
+            <button class="btn btn-secondary" onclick="saveGame()" id="btn-v-save">💾 儲存進度 (快速鍵)</button>
             <button class="btn btn-action" onclick="startNextBattle()" id="btn-v-next">⚔️ 踏上征途 (下一戰)</button>
         </div>
     </div>
@@ -229,8 +247,52 @@
 </div>
 
 <script>
+// 使用 GitHub Pages 獨立隔離 Key，防止與其他託管遊戲撞名
+const SAVE_KEY = "pyrpg_save_github_v1.1_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+
 function showGameGuide() { hideAll(); document.getElementById('guide-screen').classList.remove('hidden'); }
 function hideGameGuide() { showMainMenu(); }
+
+function showTransferSave() {
+    hideAll();
+    document.getElementById('transfer-save-screen').classList.remove('hidden');
+    let localData = localStorage.getItem(SAVE_KEY);
+    if (localData) {
+        document.getElementById('save-code-input').value = btoa(encodeURIComponent(localData));
+    } else {
+        document.getElementById('save-code-input').value = "";
+    }
+}
+
+function exportSaveCode() {
+    let localData = localStorage.getItem(SAVE_KEY);
+    if (!localData) { alert("⚠️ 目前沒有可導出的本地存檔！請先開始遊戲並存檔。"); return; }
+    let code = btoa(encodeURIComponent(localData));
+    navigator.clipboard.writeText(code).then(() => {
+        alert("📋 存檔代碼已成功複製到剪貼簿！您可以貼上發送給自己備份。");
+    }).catch(() => {
+        document.getElementById('save-code-input').value = code;
+        alert("📋 存檔代碼已生成於框內，請手動全選複製。");
+    });
+}
+
+function importSaveCode() {
+    let code = document.getElementById('save-code-input').value.trim();
+    if (!code) { alert("❌ 請先貼上有效的存檔代碼！"); return; }
+    try {
+        let jsonStr = decodeURIComponent(atob(code));
+        let testData = JSON.parse(jsonStr);
+        if (testData && testData.player) {
+            localStorage.setItem(SAVE_KEY, jsonStr);
+            alert("📥 存檔代碼匯入成功！即將為您載入進度...");
+            loadGame();
+        } else {
+            throw new Error("無效的資料格式");
+        }
+    } catch (e) {
+        alert("❌ 存檔代碼解析失敗，請確認代碼是否完整且未被修改！");
+    }
+}
 
 function drawMonsterVisual(mapId, isBoss) {
     const cvs = document.getElementById('monster-canvas');
@@ -412,7 +474,6 @@ const I18N = {
     }
 };
 
-// 60+ 招完整技能資料庫 (通用 11 + 戰士 20 + 法師 20 + 射手 20)
 const SKILLS = {
     // 通用 (11)
     "重擊": { nameEn: "Heavy Strike", type: "universal", cost: 50, mp: 5, mult: 1.5, descZh: "通用：1.5倍物理傷害", descEn: "1.5x Physical Damage" },
@@ -500,7 +561,37 @@ const CLASSES = {
     "Archer": { nameZh: "射手", nameEn: "Archer", hp: 130, mp: 60, min: 25, max: 35, weaponZh: "獵人長弓", weaponEn: "Hunter Bow", critRate: 15, critDmg: 150, evasion: 20 }
 };
 
-// 90 種武器裝備體系（戰士、法師、射手 初級/中級/高級各 10 種，防具獨立）
+const ALL_EQUIPS_POOL = [
+    { nameZh: "初級·皮質胸甲 (+40 MaxHP)", nameEn: "Basic Leather Armor (+40 HP)", tier: "basic", type: "armor", job: null, cost: 60, hp: 40 },
+    { nameZh: "初級·木質圓盾 (+30 MaxHP)", nameEn: "Basic Wooden Shield (+30 HP)", tier: "basic", type: "armor", job: null, cost: 50, hp: 30 },
+    { nameZh: "初級·鐵質短劍 (+12 攻擊)", nameEn: "Basic Iron Sword (+12 Atk)", tier: "basic", type: "weapon", job: "Warrior", cost: 70, atk: 12 },
+    { nameZh: "初級·學徒魔杖 (+15 攻擊)", nameEn: "Basic Apprentice Wand (+15 Atk)", tier: "basic", type: "weapon", job: "Mage", cost: 80, atk: 15 },
+    { nameZh: "初級·短獵弓 (+14 攻擊)", nameEn: "Basic Short Bow (+14 Atk)", tier: "basic", type: "weapon", job: "Archer", cost: 75, atk: 14 },
+    { nameZh: "中級·精鋼重甲 (+90 MaxHP | +5% 閃避)", nameEn: "Mid Steel Armor (+90 HP | +5% Evasion)", tier: "mid", type: "armor", job: null, cost: 140, hp: 90, evasion: 5 },
+    { nameZh: "中級·騎士長劍 (+25 攻擊 | +5% 暴擊率)", nameEn: "Mid Knight Sword (+25 Atk | +5% Crit)", tier: "mid", type: "weapon", job: "Warrior", cost: 160, atk: 25, critRate: 5 },
+    { nameZh: "中級·水晶法杖 (+30 攻擊 | +10% 暴擊傷害)", nameEn: "Mid Crystal Staff (+30 Atk | +10% CritDmg)", tier: "mid", type: "weapon", job: "Mage", cost: 180, atk: 30, critDmg: 10 },
+    { nameZh: "中級·精準長弩 (+28 攻擊 | +8% 暴擊率)", nameEn: "Mid Precision Crossbow (+28 Atk | +8% Crit)", tier: "mid", type: "weapon", job: "Archer", cost: 170, atk: 28, critRate: 8 }
+];
+
+const MAPS = {
+    1: { nameZh: "🌲 微光森林", nameEn: "Whispering Woods", villageZh: "樹梢村", villageEn: "Treetop Village", monstersZh: ["哥布林斥候", "史萊姆", "狂暴野狼"], bossZh: "哥布林千人將" },
+    2: { nameZh: "❄️ 寒霜雪原", nameEn: "Frostbite Tundra", villageZh: "冰晶鎮", villageEn: "Frost Town", monstersZh: ["霜狼", "雪原獵手", "冰晶石傀儡"], bossZh: "雪原暴熊王" },
+    3: { nameZh: "🏜️ 熾熱荒漠", nameEn: "Scorching Desert", villageZh: "烈日綠洲", villageEn: "Sun Oasis", monstersZh: ["沙漠毒蠍", "狂沙蛇衛", "石雕巨像"], bossZh: "狂沙法老王" },
+    4: { nameZh: "🌋 烈焰火山", nameEn: "Molten Magma Cavern", villageZh: "火環前哨站", villageEn: "Fire Circle", monstersZh: ["熔岩蜥蜴", "烈焰元素", "火焰惡魔"], bossZh: "熔岩巨龍" },
+    5: { nameZh: "☠️ 幽暗地底迷宮", nameEn: "Underdark Labyrinth", villageZh: "暗影黑市", villageEn: "Shadow Market", monstersZh: ["幽暗蜘蛛", "噬魂骷髏", "黑暗騎士"], bossZh: "暗影領主·卡爾巨影" },
+    6: { nameZh: "🏛️ 失落古城", nameEn: "Lost Ruins of Atlantis", villageZh: "海底驛站", villageEn: "Ocean Outpost", monstersZh: ["遺跡守衛", "沉淪亡靈", "符文石像"], bossZh: "古代遠古守護者" },
+    7: { nameZh: "⚡ 雷霆山峰", nameEn: "Thunderstorm Peak", villageZh: "雲頂高地", villageEn: "Cloudtop Village", monstersZh: ["雷霆獅鷲", "風暴元素", "閃電巨鷹"], bossZh: "風暴泰坦" },
+    8: { nameZh: "🌊 深海幽谷", nameEn: "Abyssal Ocean Trench", villageZh: "海螺港口", villageEn: "Conch Port", monstersZh: ["潮汐海妖", "巨鉗蟹王", "深海怪魚"], bossZh: "深淵巨獸·克拉肯" },
+    9: { nameZh: "☁️ 天空神殿", nameEn: "Sky Temple of Celestials", villageZh: "聖光高塔", villageEn: "Holy Tower", monstersZh: ["神殿石像鬼", "光明聖衛", "天空巨鷹"], bossZh: "天使長·米迦勒幻影" },
+    10: { nameZh: "👑 魔王城城堡", nameEn: "Demon King Castle", villageZh: "終極前線", villageEn: "Final Front", monstersZh: ["煉獄夜魔", "漆黑騎士", "亡靈巨龍"], bossZh: "滅世魔王·路西法" }
+};
+
+const CARDS = [
+    { id: "vampire", nameZh: "🩸 吸血鬼之吻", nameEn: "🩸 Vampire's Kiss", descZh: "攻擊時恢復傷害 15% HP", descEn: "15% Life Steal on Attack" },
+    { id: "berserk", nameZh: "🔥 狂暴之怒", nameEn: "🔥 Berserker Rage", descZh: "基礎攻擊力提升 25%", descEn: "Base Atk +25%" },
+    { id: "shield", nameZh: "🛡️ 鋼鐵意志", nameEn: "🛡️ Iron Will", descZh: "最大血量提升 80 點", descEn: "Max HP +80" }
+];
+
 const FORGE_RECIPES_DATABASE = [
     // ⚔️ 戰士武器 (初級 10 種)
     { category: "warrior", nameZh: "初級·青銅劍 (+15 攻擊)", nameEn: "Basic Bronze Sword (+15 Atk)", req: { copper: 5 }, job: "Warrior", tier: "basic", atk: 15 },
@@ -580,7 +671,7 @@ const FORGE_RECIPES_DATABASE = [
     { category: "archer", nameZh: "初級·獵人輕弩 (+18 攻擊)", nameEn: "Basic Hunter Crossbow (+18 Atk)", req: { copper: 7 }, job: "Archer", tier: "basic", atk: 18 },
     { category: "archer", nameZh: "初級·竹製長弓 (+20 攻擊)", nameEn: "Basic Bamboo Bow (+20 Atk)", req: { copper: 8 }, job: "Archer", tier: "basic", atk: 20 },
     { category: "archer", nameZh: "初級·複合木弓 (+22 攻擊)", nameEn: "Basic Composite Bow (+22 Atk)", req: { copper: 9 }, job: "Archer", tier: "basic", atk: 22 },
-    { category: "archer", nameZh: "初級·精銳反曲弓 (+24 攻擊)", nameEn: "Basic Recurve Bow (+24 Atk)", tier: "basic", req: { copper: 10 }, job: "Archer", atk: 24 },
+    { category: "archer", nameZh: "初級·精銳反曲弓 (+24 攻擊)", nameEn: "Basic Recurve Bow (+24 Atk)", req: { copper: 10 }, job: "Archer", tier: "basic", atk: 24 },
     { category: "archer", nameZh: "初級·鐵臂重弩 (+25 攻擊)", nameEn: "Basic Iron Crossbow (+25 Atk)", req: { copper: 10, iron: 2 }, job: "Archer", tier: "basic", atk: 25 },
     { category: "archer", nameZh: "初級·疾風短弓 (+27 攻擊)", nameEn: "Basic Gale Bow (+27 Atk)", req: { copper: 10, iron: 3 }, job: "Archer", tier: "basic", atk: 27 },
     { category: "archer", nameZh: "初級·穿雲木弓 (+28 攻擊)", nameEn: "Basic Cloud Bow (+28 Atk)", req: { copper: 10, iron: 4 }, job: "Archer", tier: "basic", atk: 28 },
@@ -1086,8 +1177,6 @@ function updateAchieveUI() {
         if (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal)) canClaim = true;
         if (ach.reqType === "skillCount" && player.skills.length >= ach.reqVal) canClaim = true;
         if (ach.reqType === "equipCount" && player.equips.length >= ach.reqVal) canClaim = true;
-        if (ach.reqType === "potHp" && player.potions.hp >= ach.reqVal) canClaim = true;
-        if (ach.reqType === "potMp" && player.potions.mp >= ach.reqVal) canClaim = true;
 
         let btn = document.createElement('button'); btn.className = "btn";
         let title = curLang === "zh" ? ach.titleZh : ach.titleEn;
@@ -1292,18 +1381,33 @@ function refreshSkills() {
     } else alert(t.noGold);
 }
 
-function saveGame() { localStorage.setItem('pyrpg_save_v1.0', JSON.stringify({ player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills })); alert(I18N[curLang].saveSuccess); }
+function saveGame() { 
+    try {
+        let saveData = { player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); 
+        alert(I18N[curLang].saveSuccess + "\n(存檔Key已寫入 GitHub Pages 專屬隔離區)"); 
+    } catch(e) {
+        alert("❌ 儲存失敗！您的瀏覽器可能停用了 LocalStorage 功能。");
+    }
+}
+
 function loadGame() { 
-    let saved = localStorage.setItem('pyrpg_save_v1.0'); 
-    if (saved) { 
-        let data = JSON.parse(saved); 
-        player = data.player; 
-        defeatedCount = data.defeatedCount; 
-        if (data.shopEquips) shopEquips = data.shopEquips;
-        if (data.shopSkills) shopSkills = data.shopSkills;
-        alert(I18N[curLang].loadSuccess); 
-        showVillage(); 
-    } 
+    try {
+        let saved = localStorage.getItem(SAVE_KEY); 
+        if (saved) { 
+            let data = JSON.parse(saved); 
+            player = data.player; 
+            defeatedCount = data.defeatedCount; 
+            if (data.shopEquips) shopEquips = data.shopEquips;
+            if (data.shopSkills) shopSkills = data.shopSkills;
+            alert(I18N[curLang].loadSuccess); 
+            showVillage(); 
+        } else {
+            alert("⚠️ 找不到本地存檔，請確認您已在本頁面存檔過，或使用【跨裝置代碼匯入】進度。");
+        }
+    } catch(e) {
+        alert("❌ 讀取存檔時發生錯誤，存檔資料可能已被損壞。");
+    }
 }
 
 showMainMenu();
